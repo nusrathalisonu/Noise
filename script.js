@@ -8,7 +8,7 @@ async function processAudio() {
         return;
     }
 
-    console.log("Processing file:", fileInput.name);  // Debugging log
+    console.log("Processing file:", fileInput.name);
 
     const fileReader = new FileReader();
     fileReader.readAsArrayBuffer(fileInput);
@@ -17,20 +17,19 @@ async function processAudio() {
         const arrayBuffer = fileReader.result;
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-        console.log("Decoded audio successfully!");  // Debugging log
+        console.log("Decoded audio successfully!");
 
-        // Apply noise reduction (basic high-pass filter)
+        // Apply basic noise reduction using high-pass filter
         const reducedAudioBuffer = await applyNoiseGate(audioBuffer);
 
-        console.log("Audio processing complete!");  // Debugging log
+        console.log("Audio processing complete!");
 
         // Convert processed audio buffer to Blob
         const processedBlob = await bufferToWave(reducedAudioBuffer, reducedAudioBuffer.length);
         const processedUrl = URL.createObjectURL(processedBlob);
 
         // Update audio player with processed audio
-        const audioPlayer = document.getElementById("audioPlayer");
-        audioPlayer.src = processedUrl;
+        document.getElementById("audioPlayer").src = processedUrl;
 
         // Enable download
         const downloadLink = document.getElementById("downloadLink");
@@ -50,7 +49,7 @@ async function applyNoiseGate(audioBuffer) {
     const source = offlineContext.createBufferSource();
     source.buffer = audioBuffer;
 
-    // Create a noise gate filter (High-Pass Filter to remove low-frequency hum)
+    // High-pass filter to remove low-frequency noise
     const filter = offlineContext.createBiquadFilter();
     filter.type = "highpass";
     filter.frequency.value = 1000; // Remove frequencies below 1000Hz
