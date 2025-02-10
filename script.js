@@ -8,6 +8,8 @@ async function processAudio() {
         return;
     }
 
+    console.log("Processing file:", fileInput.name);  // Debugging log
+
     const fileReader = new FileReader();
     fileReader.readAsArrayBuffer(fileInput);
     fileReader.onload = async () => {
@@ -15,8 +17,12 @@ async function processAudio() {
         const arrayBuffer = fileReader.result;
         audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-        // Apply noise reduction (basic noise gate)
+        console.log("Decoded audio successfully!");  // Debugging log
+
+        // Apply noise reduction (basic high-pass filter)
         const reducedAudioBuffer = await applyNoiseGate(audioBuffer);
+
+        console.log("Audio processing complete!");  // Debugging log
 
         // Convert processed audio buffer to Blob
         const processedBlob = await bufferToWave(reducedAudioBuffer, reducedAudioBuffer.length);
@@ -56,7 +62,6 @@ async function applyNoiseGate(audioBuffer) {
     return await offlineContext.startRendering();
 }
 
-// Convert AudioBuffer to a WAV Blob
 function bufferToWave(abuffer, len) {
     const numOfChan = abuffer.numberOfChannels;
     const length = len * numOfChan * 2 + 44;
@@ -71,4 +76,43 @@ function bufferToWave(abuffer, len) {
         pos += 2;
     };
 
-    const
+    const setUint32 = (data) => {
+        view.setUint32(pos, data, true);
+        pos += 4;
+    };
+
+    // RIFF header
+    setUint32(0x46464952);
+    setUint32(length - 8);
+    setUint32(0x45564157);
+
+    // fmt subchunk
+    setUint32(0x20746d66);
+    setUint32(16);
+    setUint16(1);
+    setUint16(numOfChan);
+    setUint32(abuffer.sampleRate);
+    setUint32(abuffer.sampleRate * 2 * numOfChan);
+    setUint16(numOfChan * 2);
+    setUint16(16);
+
+    // data subchunk
+    setUint32(0x61746164);
+    setUint32(length - pos - 4);
+
+    for (i = 0; i < abuffer.numberOfChannels; i++) {
+        channels.push(abuffer.getChannelData(i));
+    }
+
+    while (pos < length) {
+        for (i = 0; i < numOfChan; i++) {
+            sample = Math.max(-1, Math.min(1, channels[i][offset]));
+            sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+            view.setInt16(pos, sample, true);
+            pos += 2;
+        }
+        offset++;
+    }
+
+    return new Blob([buffer], { type: "audio/wav" });
+}
