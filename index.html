@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noise Cancellation</title>
+    <title>Noise Reduction Tool</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>Upload Audio for Noise Reduction</h2>
+
+    <h1>Noise Reduction Tool</h1>
+    
     <input type="file" id="audioInput" accept="audio/*">
     <button onclick="processAudio()">Reduce Noise</button>
+
+    <h2>Processed Audio:</h2>
     <audio id="audioPlayer" controls></audio>
     <a id="downloadLink" style="display: none;">Download Processed Audio</a>
 
     <script src="script.js"></script>
+
 </body>
 </html>
